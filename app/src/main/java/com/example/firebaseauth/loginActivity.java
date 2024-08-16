@@ -11,9 +11,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class loginActivity extends AppCompatActivity {
-    EditText inputEmail,inputPass;
-    Button btnLog,btnG,btnF;
+    EditText inputN,inputPass;
+    Button btnLog;
     TextView txtLog;
+    SQLDatabase Mydb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,17 +22,16 @@ public class loginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         txtLog = findViewById(R.id.txtLog);
         btnLog = findViewById(R.id.btnLog);
-        btnG = findViewById(R.id.btnG);
-        btnF = findViewById(R.id.btnF);
-        inputEmail = findViewById(R.id.inputEmailLog);
+        inputN = findViewById(R.id.inputEmailLog);
         inputPass = findViewById(R.id.inputPasswordLog);
+        Mydb = new SQLDatabase(this);
 
 
         btnLog.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                String email = inputEmail.getText().toString();
+                String email = inputN.getText().toString();
                 String password = inputPass.getText().toString();
                 CheckInformationLogin(email,password);
             }
@@ -46,14 +46,29 @@ public class loginActivity extends AppCompatActivity {
         });
     }
 
-    private void CheckInformationLogin(String email,String password) {
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@" +
-                "(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-        if(!email.matches(emailRegex))
-            errorMsg(inputEmail,"Invalid email Address");
-        else if((password.length()<7)) {
+    private void CheckInformationLogin(String name,String password) {
+        if (name.isEmpty() || name.length() < 2 || name.length() > 50 || !name.matches("[a-zA-Zأ-ي ]+")) {
+            errorMsg(inputN, "only alphabetic between 2 and 50");
+        }else if((password.length()<7)) {
             errorMsg(inputPass,"At least 8 characters");
-        }else Toast.makeText(this, "Call Method login", Toast.LENGTH_SHORT).show();
+        }else {
+            Toast.makeText(this, "Call Method login", Toast.LENGTH_SHORT).show();
+            checkInfoLogin(name,password);
+        }
+    }
+
+    private void checkInfoLogin(String name,String password) {
+        boolean res= Mydb.checkUsername(name);
+        if(res==false)
+            errorMsg(inputN,"user name not exist");
+        else {
+            boolean r = Mydb.checkuserPassword(name,password);
+            if(r==true){
+                Intent intent = new Intent(loginActivity.this,HomeActivity.class);
+                loginActivity.this.startActivity(intent);
+                Toast.makeText(this, "login successfully", Toast.LENGTH_SHORT).show();
+            }else errorMsg(inputPass,"password not correct");
+        }
     }
 
     private void errorMsg(EditText input, String s) {
